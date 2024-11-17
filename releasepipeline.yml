@@ -1,0 +1,69 @@
+trigger:
+- main  
+
+resources:
+  repositories:
+  - repository: apprenti  
+    type: git
+    name: younusk/apprenti  
+
+stages:
+- stage: Deploy
+  jobs:
+  - job: DeployToAKS
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+
+    - task: AzureCLI@2
+      displayName: 'Login to Azure'
+      inputs:
+        azureSubscription: 'kysvccnxn'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging into Azure..."
+          az account set --subscription $(azureSubscription)
+
+    - task: AzureCLI@2
+      displayName: 'Login to Azure Container Registry'
+      inputs:
+        azureSubscription: 'kysvccnxn'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging into Azure Container Registry..."
+          az acr login --name kyproj3-acr
+
+    # Step 3: Get AKS credentials
+    - task: AzureCLI@2
+      displayName: 'Get AKS Credentials'
+      inputs:
+        azureSubscription: 'kysvccnxn'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Getting AKS credentials..."
+          az aks get-credentials --resource-group <your-resource-group> --name kyproj3-aks1
+
+    - task: Kubernetes@1
+      displayName: 'Deploy Docker Image to AKS'
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'kysvccnxn'
+        azureResourceGroup: 'Project3'  
+        kubernetesCluster: 'kyproj3-aks1'
+        namespace: 'default'  
+        command: apply
+        arguments: |
+          -f k8s/deployment.yaml  # Reference to your Kubernetes deployment YAML file if you have one (optional)
+
+    - task: AzureCLI@2
+      displayName: 'Set Docker Image on Deployment'
+      inputs:
+        azureSubscription: 'kysvccnxn'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Setting Docker image on Kubernetes deployment..."
+          kubectl set image deployment/styleapp styleapp=kyproj3-acr.azurecr.io/styleapp:$(Build.BuildId) --record

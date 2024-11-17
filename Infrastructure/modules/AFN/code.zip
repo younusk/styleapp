@@ -1,0 +1,30 @@
+pip install kubernetes
+
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+
+def delete_dead_pods():
+    # Load the Kubernetes configuration
+    config.load_kube_config()
+
+    # Create an API client instance for the core API
+    v1 = client.CoreV1Api()
+
+    try:
+        # List all pods in all namespaces
+        pods = v1.list_pod_for_all_namespaces()
+        for pod in pods.items:
+            # Check if the pod has failed
+            if pod.status.phase == "Failed":
+                pod_namespace = pod.metadata.namespace
+                pod_name = pod.metadata.name
+                print(f"Deleting failed pod: {pod_name} in namespace: {pod_namespace}")
+                
+                # Delete the pod
+                v1.delete_namespaced_pod(name=pod_name, namespace=pod_namespace)
+    
+    except ApiException as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    delete_dead_pods()

@@ -1,0 +1,59 @@
+trigger:
+  branches:
+    include:
+      - main 
+
+pool:
+  vmImage: 'ubuntu-latest' 
+
+variables:
+  azureSubscription: 'kysvccnxn'
+  terraformDirectory: './Infrastructure' 
+  bk-rg-name: "kytfstate"
+  bk-str-account-name: "kayystorage" 
+  bk-container-name: "kytfcontainer"
+  bk-key: "terraform.tfstate"
+
+stages:
+  - stage: Initialize
+    displayName: "Terraform Initialization"
+    jobs:
+      - job: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+        displayName: "Initialize Terraform"
+        steps:
+          - task: Checkout@1
+            displayName: "Checkout Repository"
+
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: 'latest'
+            displayName: "Install Terraform"
+
+          - script: |
+              cd $(terraformDirectory)
+              terraform init -input=false
+            displayName: "Terraform Init"
+
+  - stage: Plan
+    displayName: "Terraform Plan"
+    dependsOn: Initialize
+    jobs:
+      - job: Plan
+        displayName: "Generate Terraform Plan"
+        steps:
+          - script: |
+              cd $(terraformDirectory)
+              terraform plan -out=tfplan -var-file="secrets.tfvars"
+            displayName: "Run Terraform Plan"
+
+  - stage: Apply
+    displayName: "Terraform Apply"
+    dependsOn: Plan
+    jobs:
+      - job: Apply
+        displayName: "Apply Terraform Plan"
+        steps:
+          - script: |
+              cd $(terraformDirectory)
+              terraform apply -var-file="secrets.tfvars" tfplan
+            displayName: "Run Terraform Apply"
