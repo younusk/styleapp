@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clothing Preferences</title>
+</head>
+<body>
+    <h1>What are your clothing preferences?</h1>
+    <form method="POST">
+        <label for="style">Preferred Style:</label>
+        <select name="style" id="style" required>
+            <option value="Casual">Casual</option>
+            <option value="Formal">Formal</option>
+            <option value="Sporty">Sporty</option>
+            <option value="Chic">Chic</option>
+        </select><br><br>
+
+        <label for="color">Favorite Color:</label>
+        <input type="text" name="color" id="color" required><br><br>
+
+        <label for="occasion">Occasion:</label>
+        <select name="occasion" id="occasion" required>
+            <option value="Everyday">Everyday</option>
+            <option value="Party">Party</option>
+            <option value="Work">Work</option>
+            <option value="Outdoor">Outdoor</option>
+        </select><br><br>
+
+        <label for="fabric">Preferred Fabric:</label>
+        <select name="fabric" id="fabric" required>
+            <option value="Cotton">Cotton</option>
+            <option value="Wool">Wool</option>
+            <option value="Polyester">Polyester</option>
+            <option value="Silk">Silk</option>
+        </select><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
